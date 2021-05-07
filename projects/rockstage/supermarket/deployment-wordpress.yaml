@@ -1,0 +1,94 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress
+  labels:
+    app: wordpress
+spec:
+  replicas: 1
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      app: wordpress
+      tier: frontend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: wordpress
+        tier: frontend
+    spec:
+      terminationGracePeriodSeconds: 30
+      initContainers:
+      - name: init-mysql
+        resources:
+          requests:
+            cpu: "125m"
+            memory: "64Mi"
+          limits:
+            cpu: "250m"
+            memory: "128Mi"
+        image: mysql
+        imagePullPolicy: IfNotPresent
+        command:
+        - sh
+        - /tmp/config-init/init.sh
+        volumeMounts:
+        - name: config-init
+          mountPath: /tmp/config-init
+        env:
+        - name: ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: wp-pass
+              key: password
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-pass
+              key: password
+        envFrom:
+          - configMapRef:
+              name: wordpress-envs
+          - configMapRef:
+              name: mysql-envs
+      containers:
+      - image: wordpress
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            cpu: "125m"
+            memory: "64Mi"
+          limits:
+            cpu: "250m"
+            memory: "128Mi"
+        name: wordpress
+        env:
+        - name: WORDPRESS_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: wp-pass
+              key: password
+        - name: ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: wp-pass
+              key: password
+        envFrom:
+          - configMapRef:
+              name: wordpress-envs
+        ports:
+        - containerPort: 80
+          name: wordpress
+        volumeMounts:
+        - name: frontend-assets
+          mountPath: /var/www/html
+      volumes:
+      - name: frontend-assets
+        persistentVolumeClaim:
+          claimName: wp-pv-claim
+      - name: config-init
+        configMap:
+          name: config-init

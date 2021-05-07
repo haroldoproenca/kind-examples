@@ -1,0 +1,27 @@
+kind: Kustomization
+
+commonLabels:
+  customer: supermaket
+
+bases:
+- ../../../bases/wordpress/5.7
+
+namespace: supermarket
+
+resources:
+- namespace.yaml
+
+configMapGenerator:
+- name: config-init
+  files:
+    - config-init/wordpress.mssql
+    - config-init/init.sh
+
+patchesStrategicMerge:
+- configmap-wordpress.yaml
+- deployment-wordpress.yaml
+
+secretGenerator:
+- name: wp-pass
+  literals:
+  - password=Supermarket202020

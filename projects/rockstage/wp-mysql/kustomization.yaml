@@ -1,0 +1,4 @@
+kind: Kustomization
+
+bases:
+- ../../../bases/mysql/5.7

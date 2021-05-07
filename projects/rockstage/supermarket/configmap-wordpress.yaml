@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wordpress-envs
+data:
+  WORDPRESS_DB_NAME: "supermarket"
+  WORDPRESS_DB_USER: "supermarket"
+  SITE_URL: "http://localhost:8090"
+  ADMIN_EMAIL: "supermarket@supermarket.com"
+  BLOG_NAME: "supermarket-template"
+
