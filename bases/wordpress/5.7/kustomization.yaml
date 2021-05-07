@@ -1,0 +1,33 @@
+kind: Kustomization
+
+commonLabels:
+  owner: rockstage
+
+resources:
+- deployment-wordpress.yaml
+- deployment-phpmyadmin.yaml
+- service-wordpress.yaml
+- service-phpmyadmin.yaml
+- pvc-wordpress.yaml
+- configmap-wordpress.yaml
+- configmap-mysql.yaml
+
+secretGenerator:
+- name: mysql-pass
+  literals:
+  - password=mysqlpasswd2021
+
+images:
+- name: mysql
+  newName: mysql
+  newTag: "5.7"
+- name: wordpress
+  newName: wordpress
+  newTag: "5.7.1-php7.4-apache"
+- name: phpmyadmin
+  newName: phpmyadmin
+  newTag: "5.1.0-apache"
+
+  
+
+

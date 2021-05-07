@@ -1,0 +1,84 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress
+  labels:
+    app: wordpress
+spec:
+  replicas: 1
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      app: wordpress
+      tier: frontend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: wordpress
+        tier: frontend
+    spec:
+      terminationGracePeriodSeconds: 30
+      initContainers:
+      - name: init-mysql
+        resources:
+          requests:
+            cpu: "125m"
+            memory: "64Mi"
+          limits:
+            cpu: "250m"
+            memory: "128Mi"
+        image: mysql
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-pass
+              key: password
+        envFrom:
+          - configMapRef:
+              name: wordpress-envs
+          - configMapRef:
+              name: mysql-envs
+      containers:
+      - image: wordpress
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            cpu: "125m"
+            memory: "64Mi"
+          limits:
+            cpu: "250m"
+            memory: "128Mi"
+        readinessProbe:
+          httpGet:
+          tcpSocket:
+            port: 80
+          initialDelaySeconds: 1
+          timeoutSeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+          tcpSocket:
+            port: 80
+          initialDelaySeconds: 1
+          timeoutSeconds: 5
+          periodSeconds: 30
+        name: wordpress
+        env:
+        envFrom:
+          - configMapRef:
+              name: wordpress-envs
+        ports:
+        - containerPort: 80
+          name: wordpress
+        volumeMounts:
+        - name: frontend-assets
+          mountPath: /var/www/html
+      volumes:
+      - name: frontend-assets
+        persistentVolumeClaim:
+          claimName: wp-pv-claim

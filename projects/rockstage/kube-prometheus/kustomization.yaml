@@ -1,0 +1,4 @@
+kind: Kustomization
+
+bases:
+- ../../../bases/kube-prometheus/0.8

@@ -1,0 +1,23 @@
+kind: Kustomization
+
+commonLabels:
+  owner: rockstage
+
+namespace: wp-mysql
+resources:
+- deployment-mysql.yaml
+- pvc-mysql.yaml
+- service-mysql.yaml
+- namespace.yaml
+
+secretGenerator:
+- name: mysql-pass
+  literals:
+  - password=mysqlpasswd2021
+
+images:
+- name: mysql
+  newName: mysql
+  newTag: "5.7"
+
+
